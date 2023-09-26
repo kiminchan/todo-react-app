@@ -16,7 +16,7 @@ class App extends React.Component {
     };
   }
 
-  // (1) add 함수 추가 
+  // add 함수 추가 
   add = (item) => {
     const thisItems = this.state.items;
     item.id = "ID-" + thisItems.length;
@@ -27,17 +27,28 @@ class App extends React.Component {
 
   }
 
+  //delete 함수 추가 
+  delete = (item) => {
+    console.log("call delete");
+    const thisItems = this.state.items;
+    console.log(item.id);
+    const newItems = thisItems.filter(e => e.id !== item.id);
+    this.setState({ items: newItems }, () => {
+      console.log("Update Items: ", this.state.items)
+    });
+  }
+
   render() {
 
     var todoItems = this.state.items.length > 0 && (
       <Paper style={{ margin: 16 }}>
         <List>
           {this.state.items.map((item, idx) => (
-            <Todo item={item} key={item.id} />
+            <Todo item={item} key={item.id} delete={this.delete} />
           ))}
         </List>
       </Paper>
-    )
+    );
 
     // (2) add 함수 연결 
     return (
