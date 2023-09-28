@@ -3,39 +3,56 @@ import Todo from './Todo';
 import AddTodo from './AddTodo'
 import { Paper, List, Container } from "@material-ui/core";
 import './App.css';
+import { call } from './service/ApiService';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: [
-        { id: 0, title: "Todo 1", done: true },
-        { id: 1, title: "Todo 2", done: false },
-      ],
-
+      items: [],
     };
   }
 
-  // add 함수 추가 
+  // add 함수 추가
   add = (item) => {
-    const thisItems = this.state.items;
-    item.id = "ID-" + thisItems.length;
-    item.done = false;
-    thisItems.push(item);
-    this.setState({ items: thisItems });
-    console.log("items :", this.state.items);
-
+    call("/todo", "POST", item).then((response) => {
+      this.setState({ items: response.data });
+      // 데이터 추가 후에 데이터 다시 불러오기
+      this.loadTodos();
+    });
   }
 
-  //delete 함수 추가 
   delete = (item) => {
-    console.log("call delete");
-    const thisItems = this.state.items;
-    console.log(item.id);
-    const newItems = thisItems.filter(e => e.id !== item.id);
-    this.setState({ items: newItems }, () => {
-      console.log("Update Items: ", this.state.items)
+    call("/todo", "DELETE", item).then((response) => {
+      this.setState({ items: response.data });
+      // 데이터 삭제 후에 데이터 다시 불러오기
+      this.loadTodos();
     });
+  }
+
+  update = (item) => {
+    call("/todo", "PUT", item).then((response) => {
+      this.setState({ items: response.data });
+      // 데이터 업데이트 후에 데이터 다시 불러오기
+      this.loadTodos();
+    });
+  }
+
+  componentDidMount() {
+    this.loadTodos();
+  }
+
+  // componentDidMount() {
+  //   call("/todo", "GET", null).then((response) =>
+  //     this.setState({ items: response.data })
+  //   );
+  // }
+
+  // 데이터를 불러오는 함수 정의
+  loadTodos = () => {
+    call("/todo", "GET", null).then((response) =>
+      this.setState({ items: response.data })
+    );
   }
 
   render() {
@@ -44,13 +61,13 @@ class App extends React.Component {
       <Paper style={{ margin: 16 }}>
         <List>
           {this.state.items.map((item, idx) => (
-            <Todo item={item} key={item.id} delete={this.delete} />
+            <Todo item={item} key={item.id} delete={this.delete} update={this.update} />
           ))}
         </List>
       </Paper>
     );
 
-    // (2) add 함수 연결 
+
     return (
       <div className="App">
         <Container maxWidth="md">
