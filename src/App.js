@@ -2,39 +2,59 @@
 import React, { useState, useEffect } from 'react';
 import Todo from './Todo';
 import AddTodo from './AddTodo'
-import { Paper, List, Container, Grid, Button, AppBar, Toolbar, Typography } from "@material-ui/core";
+import Paging from './Paging'
+import { Paper, List, Container, Grid, Button, AppBar, Toolbar, Typography, IconButton } from "@material-ui/core";
 import './App.css';
 import { call, signout } from './service/ApiService';
-
+import DeleteOutlined from "@material-ui/icons/DeleteOutlined";
 
 function App() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [page, setPage] = useState(1);
+  const limit = 5;
+  const offset = (page - 1) * limit // 시작점과 끝점을 구하는 offset
+
+  const postsData = (posts) => {
+    if (posts) {
+      let result = posts.slice(offset, offset + limit);
+      return result;
+    }
+  }
+
   const add = (item) => {
     call("/todo", "POST", item).then((response) =>
       setItems(response.data)
     );
-    loadTodos();
+
   }
 
   const deleteItem = (item) => {
     call("/todo", "DELETE", item).then((response) =>
       setItems(response.data)
     );
-    loadTodos();
+
   }
 
   const update = (item) => {
     call("/todo", "PUT", item).then((response) =>
       setItems(response.data)
     );
-    loadTodos();
+
+  }
+
+  const deleteCompletedtodo = () => {
+    items.map((item, idx) => {
+      if (item.done === true) {
+        deleteItem(item);
+      }
+    })
   }
 
   const loadTodos = () => {
     call("/todo", "GET", null).then((response) => {
-      setItems(response.data);
+      setItems(response.data.reverse());
       setLoading(false);
     });
   }
@@ -42,15 +62,16 @@ function App() {
 
   useEffect(() => {
     loadTodos();
-  }, []);
+  });
 
   var todoItems = items.length > 0 && (
     <Paper style={{ margin: 16 }}>
       <List>
-        {items.map((item, idx) => (
+        {postsData(items.map((item, idx) => (
           <Todo item={item} key={item.id} delete={deleteItem} update={update} />
-        ))}
+        )))}
       </List>
+
     </Paper>
   );
 
@@ -78,6 +99,11 @@ function App() {
         <AddTodo add={add} />
         <div className="TodoList">{todoItems}</div>
       </Container>
+      <Paging limit={limit} page={page} totalPosts={items.length} setPage={setPage} />
+      <IconButton aria-label="Delete"
+        onClick={deleteCompletedtodo}>completed todos delete
+        <DeleteOutlined />
+      </IconButton>
     </div>
   );
 
